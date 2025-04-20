@@ -1,0 +1,283 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Resumes{% endblock %}
+
+{% block styles %}
+<style>
+.loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.spinner-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: white;
+}
+
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1001;
+    display: none;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner-container">
+        <div class="progress" style="height: 30px; width: 300px; margin: 0 auto;">
+            <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%; font-size: 1.2rem;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+        </div>
+        <p id="progressMessage" class="mt-3 text-light" style="display:none;"></p>
+    </div>
+</div>
+
+<!-- Notification -->
+<div class="alert notification" id="notification" role="alert"></div>
+
+<!-- Resume Summary Modal -->
+<div class="modal fade" id="resumeSummaryModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Processed Resumes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="resumeSummaryContent">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Upload Resumes</h4>
+            </div>
+            <div class="card-body">
+                <form id="uploadForm" enctype="multipart/form-data" class="dropzone-form">
+                    <div class="mb-4 text-center">
+                        <div class="dropzone-area p-5 border rounded" id="dropzone">
+                            <div class="text-center">
+                                <i class="fas fa-cloud-upload-alt fa-3x mb-3"></i>
+                                <p class="mb-2">Drag and drop PDF files here</p>
+                                <p class="text-muted">or</p>
+                                <label class="btn btn-primary mb-0">
+                                    Browse Files
+                                    <input type="file" name="files[]" multiple accept=".pdf" class="d-none" id="fileInput">
+                                </label>
+                            </div>
+                        </div>
+                        <div id="fileList" class="mt-3">
+                            <!-- Selected files will be listed here -->
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-success" id="uploadBtn" disabled>
+                            Upload and Process
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('uploadForm');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const notification = document.getElementById('notification');
+    const resumeSummaryModal = new bootstrap.Modal(document.getElementById('resumeSummaryModal'));
+    const resumeSummaryContent = document.getElementById('resumeSummaryContent');
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+    const uploadBtn = document.getElementById('uploadBtn');
+    
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    // Highlight drop zone when item is dragged over it
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, unhighlight, false);
+    });
+    
+    // Handle dropped files
+    dropzone.addEventListener('drop', handleDrop, false);
+    
+    // Handle selected files
+    fileInput.addEventListener('change', handleFiles);
+    
+    // Handle form submission
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        loadingOverlay.style.display = 'block';
+        const progressBar = document.getElementById('progressBar');
+        const progressMessage = document.getElementById('progressMessage');
+        progressBar.style.width = '0%';
+        progressBar.setAttribute('aria-valuenow', 0);
+        progressBar.textContent = '0%';
+        progressMessage.style.display = 'none';
+        
+        const formData = new FormData(form);
+        try {
+            // Animate progress bar to simulate upload progress
+            let progress = 0;
+            const interval = setInterval(() => {
+                if (progress < 90) {
+                    progress += Math.random() * 10;
+                    if (progress > 90) progress = 90;
+                    progressBar.style.width = progress + '%';
+                    progressBar.setAttribute('aria-valuenow', Math.floor(progress));
+                    progressBar.textContent = Math.floor(progress) + '%';
+                }
+            }, 150);
+            
+            const response = await fetch('{{ url_for("upload") }}', {
+                method: 'POST',
+                body: formData
+            });
+            clearInterval(interval);
+            progressBar.style.width = '100%';
+            progressBar.setAttribute('aria-valuenow', 100);
+            progressBar.textContent = '100%';
+            
+            const text = await response.text();
+            console.log('Server response:', text);
+            
+            if (!response.ok) {
+                progressMessage.textContent = text || 'Upload failed';
+                progressMessage.className = 'mt-3 text-danger';
+                progressMessage.style.display = 'block';
+                throw new Error(text || 'Upload failed');
+            }
+            
+            // Show processed message
+            progressMessage.textContent = 'Resume has been processed successfully!';
+            progressMessage.className = 'mt-3 text-success';
+            progressMessage.style.display = 'block';
+            
+            // Display resume summaries in modal
+            const resumes = text.split('\n\n---\n\n');
+            const headerText = resumes.shift(); // Remove the success message
+            
+            let summaryHtml = '<div class="list-group">';
+            resumes.forEach(resume => {
+                // Convert the plain text to HTML, preserving newlines
+                const htmlContent = resume
+                    .replace(/\n/g, '<br>')
+                    .replace(/•/g, '&bull;');
+                
+                summaryHtml += `
+                    <div class="list-group-item">
+                        <div class="resume-text">${htmlContent}</div>
+                    </div>
+                `;
+            });
+            summaryHtml += '</div>';
+            
+            setTimeout(() => {
+                resumeSummaryContent.innerHTML = summaryHtml;
+                resumeSummaryModal.show();
+                loadingOverlay.style.display = 'none';
+                // Clear form
+                form.reset();
+                fileList.innerHTML = '';
+                uploadBtn.disabled = true;
+                progressBar.style.width = '0%';
+                progressBar.setAttribute('aria-valuenow', 0);
+                progressBar.textContent = '0%';
+                progressMessage.style.display = 'none';
+            }, 1200);
+        } catch (error) {
+            console.error('Upload error:', error);
+            progressMessage.textContent = error.message;
+            progressMessage.className = 'mt-3 text-danger';
+            progressMessage.style.display = 'block';
+        } finally {
+            // Re-enable the upload button
+            uploadBtn.disabled = false;
+        }
+    });
+    
+    function preventDefaults (e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    function highlight(e) {
+        dropzone.classList.add('border-primary');
+    }
+    
+    function unhighlight(e) {
+        dropzone.classList.remove('border-primary');
+    }
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        handleFiles({ target: { files: files }});
+    }
+    
+    function handleFiles(e) {
+        const files = [...e.target.files];
+        // Filter out non-PDF files
+        const pdfFiles = files.filter(file => file.name.toLowerCase().endsWith('.pdf'));
+        if (pdfFiles.length < files.length) {
+            notification.textContent = 'Only PDF files are allowed';
+            notification.className = 'alert notification alert-warning';
+            notification.style.display = 'block';
+            setTimeout(() => notification.style.display = 'none', 5000);
+        }
+        updateFileList(pdfFiles);
+        uploadBtn.disabled = pdfFiles.length === 0;
+    }
+    
+    function updateFileList(files) {
+        if (files.length === 0) {
+            fileList.innerHTML = '';
+            return;
+        }
+        fileList.innerHTML = `
+            <div class="mb-3">
+                <h6 class="mb-2">Selected Files:</h6>
+                ${files.map(file => `
+                    <div class="alert alert-info d-flex align-items-center">
+                        <i class="fas fa-file-pdf me-2"></i>
+                        <span class="flex-grow-1">${file.name}</span>
+                        <small class="text-muted">${(file.size / 1024).toFixed(1)} KB</small>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+});
+</script>
+{% endblock %}

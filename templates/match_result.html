@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Match Results{% endblock %}
+
+{% block content %}
+<style>
+.custom-progress {
+    height: 20px;
+}
+.custom-progress .progress-bar {
+    min-width: 2em;
+}
+</style>
+<div class="row mb-4">
+    <div class="col">
+        <h2>Job Match Results</h2>
+    </div>
+    <div class="col text-end">
+        <a href="{{ url_for('match') }}" class="btn btn-primary">New Match</a>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Job Description</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">{{ job_description }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Ranked Candidates</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Name</th>
+                                <th>Match Score</th>
+                                <th>Experience</th>
+                                <th>Key Skills</th>
+                                <th>Explanation</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for candidate in candidates %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>{{ candidate.name }}</td>
+                                <td>
+                                    <div class="progress custom-progress">
+                                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ '%.0f' % (candidate.match_score * 100) }}%"
+                                             aria-valuenow="{{ candidate.match_score }}" 
+                                             aria-valuemin="0" aria-valuemax="1">
+                                            {{ '%.1f' % (candidate.match_score * 10) }}/10
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ candidate.total_years_experience }} years</td>
+                                <td>
+                                    {% for skill in candidate.skills[:3] %}
+                                    <span class="badge bg-secondary me-1">{{ skill }}</span>
+                                    {% endfor %}
+                                    {% if candidate.skills|length > 3 %}
+                                    <span class="badge bg-light text-dark">+{{ candidate.skills|length - 3 }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ candidate.match_explanation }}</td>
+                                <td>
+                                    <a href="{{ url_for('resume_detail', resume_id=candidate.id) }}" 
+                                       class="btn btn-sm btn-primary">View</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

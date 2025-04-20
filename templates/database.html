@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Database{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>SQLite Database Contents</h2>
+        <p class="text-muted">Showing all resumes stored in the local database</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Experience</th>
+                        <th>Skills</th>
+                        <th>Summary</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for resume in resumes %}
+                    <tr>
+                        <td>{{ resume.id }}</td>
+                        <td>{{ resume.name or 'Unnamed' }}</td>
+                        <td>{{ resume.total_years_experience }} years</td>
+                        <td>
+                            {% for skill in resume.skills[:5] %}
+                            <span class="badge bg-secondary me-1">{{ skill }}</span>
+                            {% endfor %}
+                            {% if resume.skills|length > 5 %}
+                            <span class="badge bg-secondary">+{{ resume.skills|length - 5 }} more</span>
+                            {% endif %}
+                        </td>
+                        {% if resume.get('professional_summary') %}
+                        <td>{{ resume.professional_summary[:100] }}...</td>
+                        {% else %}
+                        <td class="text-muted">No summary available.</td>
+                        {% endif %}
+                        <td>
+                            <a href="{{ url_for('resume_detail', resume_id=resume.id) }}" class="btn btn-sm btn-primary">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

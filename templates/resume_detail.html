@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}{{ resume.name }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h2 class="card-title">{{ resume.name }}</h2>
+                <div class="mb-3">
+                    <p class="text-muted mb-1">
+                        <i class="fas fa-envelope"></i> {{ resume.email }}
+                    </p>
+                    {% if resume.phone %}
+                    <p class="text-muted mb-1">
+                        <i class="fas fa-phone"></i> {{ resume.phone }}
+                    </p>
+                    {% endif %}
+                </div>
+                
+                <h5 class="mb-3">Professional Summary</h5>
+                <p class="card-text">{{ resume.professional_summary }}</p>
+                
+                <h5 class="mb-3">Experience</h5>
+                <p>{{ resume.total_years_experience }} years of professional experience</p>
+                
+                {% if resume.cgpa %}
+                <h5 class="mb-3">Academic Performance</h5>
+                <p>CGPA: {{ resume.cgpa }}</p>
+                {% endif %}
+                
+                <h5 class="mb-3">Skills</h5>
+                <div class="mb-4">
+                    {% for skill in resume.skills %}
+                    <span class="badge bg-primary me-2 mb-2">{{ skill }}</span>
+                    {% endfor %}
+                </div>
+                
+                {% if resume.achievements %}
+                <h5 class="mb-3">Key Achievements</h5>
+                <ul class="list-unstyled">
+                    {% for achievement in resume.achievements %}
+                    <li class="mb-2">
+                        <i class="fas fa-trophy text-warning me-2"></i>
+                        {{ achievement }}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Actions</h5>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('match') }}?pre_select={{ resume.id }}" class="btn btn-primary">
+                        Match with Job
+                    </a>
+                    <a href="{{ url_for('index') }}" class="btn btn-secondary">
+                        Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

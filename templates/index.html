@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2>Resume Database</h2>
+    </div>
+    <div class="col text-end">
+        <a href="{{ url_for('upload') }}" class="btn btn-primary">Upload Resumes</a>
+        <button class="btn btn-danger ms-2" onclick="if(confirm('Are you sure you want to delete all resumes?')) { window.location='{{ url_for('delete_all_resumes') }}'; }">Remove All Resumes</button>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Filters</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" id="skillsFilter" placeholder="Skills (comma-separated)">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="number" class="form-control" id="yearsFilter" placeholder="Min. Years">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="number" step="0.1" class="form-control" id="cgpaFilter" placeholder="Min. CGPA">
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-secondary w-100" onclick="applyFilters()">Filter</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-3 g-4" id="resumeCards">
+    {% for resume in resumes %}
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+    {% if resume.get('name') %}
+        {{ resume.name }}
+    {% elif resume.get('filename') %}
+        {{ resume.filename }}
+    {% else %}
+        No Name
+    {% endif %}
+</h5>
+{% if resume.get('professional_summary') %}
+    <p class="card-text">{{ resume.professional_summary[:150] }}...</p>
+{% endif %}
+                <div class="mb-3">
+                    <strong>Skills:</strong>
+                    <div class="mt-2">
+                        {% for skill in resume.skills %}
+                        <span class="badge bg-secondary me-1">{{ skill }}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                <a href="{{ url_for('resume_detail', resume_id=resume.id) }}" class="btn btn-primary">View Details</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function applyFilters() {
+    const skills = document.getElementById('skillsFilter').value;
+    const years = document.getElementById('yearsFilter').value;
+    const cgpa = document.getElementById('cgpaFilter').value;
+    
+    const params = new URLSearchParams();
+    if (skills) params.append('skills', skills);
+    if (years) params.append('min_years', years);
+    if (cgpa) params.append('min_cgpa', cgpa);
+    
+    fetch(`/api/filter?${params.toString()}`)
+        .then(response => response.json())
+        .then(resumes => {
+            const container = document.getElementById('resumeCards');
+            container.innerHTML = resumes.map(resume => `
+                <div class="col">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">${resume.name ? resume.name : (resume.filename ? resume.filename : 'No Name')}</h5>
+                            ${resume.professional_summary ? `<p class="card-text">${resume.professional_summary.substring(0, 150)}...</p>` : ''}
+                            <div class="mb-3">
+                                <strong>Skills:</strong>
+                                <div class="mt-2">
+                                    ${(resume.skills || []).map(skill => 
+                                        `<span class="badge bg-secondary me-1">${skill}</span>`
+                                    ).join('')}
+                                </div>
+                            </div>
+                            <a href="/resume/${resume.id}" class="btn btn-primary">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        });
+}
+</script>
+{% endblock %}

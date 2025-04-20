@@ -1,0 +1,9 @@
+Flask
+PyMuPDF
+spacy
+langgraph
+langchain
+python-dotenv
+requests
+pytest
+together

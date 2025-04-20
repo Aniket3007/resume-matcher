@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Match Job{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Match Resumes with Job</h4>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('match') }}" method="post">
+                    <div class="mb-4">
+                        <label for="jobDescription" class="form-label">Job Description</label>
+                        <textarea class="form-control" id="jobDescription" name="job_description" rows="6" required></textarea>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="requiredSkills" class="form-label">Required Skills (comma-separated)</label>
+                        <input type="text" class="form-control" id="requiredSkills" name="required_skills" 
+                               placeholder="e.g. Python, JavaScript, React">
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="minYears" class="form-label">Minimum Years Experience</label>
+                            <input type="number" class="form-control" id="minYears" name="min_years" 
+                                   min="0" step="1">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="minCGPA" class="form-label">Minimum CGPA</label>
+                            <input type="number" class="form-control" id="minCGPA" name="min_cgpa" 
+                                   min="0" max="10" step="0.1">
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary">Find Best Matches</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
