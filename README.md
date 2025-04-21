@@ -7,9 +7,9 @@ A production-ready web application that helps recruiters match resumes with job 
 - Upload multiple PDF resumes via drag-and-drop interface
 - Parse resumes into structured JSON using hybrid approach (LLM + NLP)
 - Generate professional summaries for candidates
-- Store parsed data in Firebase Firestore
+- Store parsed data in SQLite database
 - Filter candidates by skills, experience, and CGPA
-- Match resumes against job descriptions with AI scoring
+- Match resumes against job descriptions with AI scoring and find the best fit/candidate for a given role
 - Modern Bootstrap UI with responsive design
 
 ## Tech Stack
@@ -17,9 +17,9 @@ A production-ready web application that helps recruiters match resumes with job 
 - Python 3.10 with Flask 3.0
 - PyMuPDF for PDF processing
 - spaCy for NER
-- LangGraph + LangChain for agent orchestration
+- Agentic workflow + LangChain for agent orchestration
 - Together.ai (Llama-3.3-70B) for AI features
-- Firebase Firestore for storage
+- SQLite as database for storing different fields
 - Bootstrap 5 for UI
 - Docker for containerization
 
@@ -29,7 +29,6 @@ A production-ready web application that helps recruiters match resumes with job 
 2. Create a `.env` file with:
    ```
    TOGETHER_API_KEY=your_api_key
-   GOOGLE_APPLICATION_CREDENTIALS=path/to/serviceAccountKey.json
    ```
 3. Build and run with Docker:
    ```bash
@@ -66,7 +65,7 @@ resume_matcher/
 ├── Dockerfile             # Container configuration
 ├── .env                   # Environment variables
 ├── agents/                # AI agents
-├── workflows/             # LangGraph workflows
+├── workflows/             # Agentic workflows
 ├── utils/                # Helper utilities
 ├── templates/            # Jinja2 templates
 └── static/              # CSS and other assets
